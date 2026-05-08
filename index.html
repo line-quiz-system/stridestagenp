@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>心臓血管外科 Daily Quiz</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background-color: #f0f2f5; color: #333; line-height: 1.6; padding: 15px; margin: 0; }
     .header { text-align: center; padding: 10px 0 20px; }
@@ -42,32 +43,51 @@
     <h1><i class="fa-solid fa-heart-pulse" style="color:#ef4444;"></i> 心臓血管外科 Daily Quiz</h1>
   </div>
 
-  <div id="loading"><i class="fas fa-spinner fa-spin"></i> 問題を読み込んでいます...</div>
+  <div id="loading"><i class="fas fa-spinner fa-spin"></i> 認証とデータ取得を実行中...</div>
   <div id="quiz-container"></div>
 
   <script>
+    // ★LIFF IDとGASのURL（必ずご自身の最新のものになっているか確認してください）
+    const MY_LIFF_ID = "2009990487-4O047QXv";
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxFKnsH9BmLbfH5V8FZqXexP7yJoKzfJqDsxSyNZp4iPyjVe8EiD151xNOYjbb6QbXkg/exec';
 
-async function loadQuizzes() {
+    async function main() {
       try {
-        // 【追加】LINEで送られたURLのパラメータ（?d=〇）を取得してGASに渡す
-        const urlParams = new URLSearchParams(window.location.search);
-        const dayParam = urlParams.get('d');
-        let fetchUrl = GAS_URL;
-        if (dayParam) {
-          fetchUrl += `?d=${dayParam}`;
-        }
-
-        const response = await fetch(fetchUrl);
-        const quizzes = await response.json();
-
-        if (quizzes.error) {
-          document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-lock"></i> ${quizzes.error}</div>`;
+        // 1. LIFFの初期化
+        await liff.init({ liffId: MY_LIFF_ID });
+        
+        if (!liff.isLoggedIn()) {
+          document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-lock"></i> LINEアプリから開いてください。</div>`;
           return;
         }
 
-        const container = document.getElementById('quiz-container');
+        // 2. UIDの取得
+        const uid = liff.getContext().userId;
+
+        // 3. URLパラメータ（?d=〇）の取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const dayParam = urlParams.get('d') || "";
+
+        // 4. GASへ通信（UIDと日数を同時に送る）
+        let fetchUrl = `${GAS_URL}?uid=${uid}`;
+        if (dayParam !== "") {
+          fetchUrl += `&d=${dayParam}`;
+        }
+
+        const response = await fetch(fetchUrl);
+        const result = await response.json();
+
+        // 5. 認証失敗またはエラーのハンドリング
+        if (!result.isAuth || result.error) {
+          const errMsg = result.error || "権限がありません。有料プランの登録が必要です。";
+          document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-lock"></i> ${errMsg}</div>`;
+          return;
+        }
+
+        // 6. 認証成功＆描画処理（GAS側で quizData という名前で送られてくる）
         document.getElementById('loading').classList.add('hidden');
+        const quizzes = result.quizData; 
+        const container = document.getElementById('quiz-container');
         
         quizzes.forEach((data, index) => {
           const card = document.createElement('div');
@@ -95,17 +115,23 @@ async function loadQuizzes() {
           `;
           container.appendChild(card);
         });
+
       } catch (e) {
-        document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> 通信エラーが発生しました。</div>`;
+        document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> 通信エラーが発生しました。時間をおいて再試行してください。</div>`;
       }
     }
 
+    // UI操作用の関数群
     function selectOption(el, quizIndex) {
       const opts = document.getElementsByClassName('quiz-card')[quizIndex].getElementsByClassName('option');
       for (let opt of opts) opt.classList.remove('selected');
       el.classList.add('selected');
     }
-    function toggleHint(index) { document.getElementById(`hint-${index}`).classList.toggle('hidden'); }
+    
+    function toggleHint(index) { 
+      document.getElementById(`hint-${index}`).classList.toggle('hidden'); 
+    }
+    
     function toggleAnswer(index) {
       const area = document.getElementById(`expl-${index}`);
       const btn = document.getElementById(`ans-btn-${index}`);
@@ -119,7 +145,9 @@ async function loadQuizzes() {
         btn.style.background = '#059669';
       }
     }
-    loadQuizzes();
+
+    // メイン処理の実行
+    main();
   </script>
 </body>
 </html>
