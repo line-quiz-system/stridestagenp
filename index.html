@@ -46,6 +46,20 @@
   <div id="loading"><i class="fas fa-spinner fa-spin"></i> 認証とデータ取得を実行中...</div>
   <div id="quiz-container"></div>
 
+  // 4. GASへ通信（UIDと日数を同時に送る）
+const params = new URLSearchParams({ uid: uid });
+if (dayParam !== "") {
+  params.append('d', dayParam);
+}
+const fetchUrl = `${GAS_URL}?${params.toString()}`;
+
+// オプションを明記してCORSリダイレクトを安全に通過させる
+const response = await fetch(fetchUrl, {
+  method: 'GET',
+  mode: 'cors',
+  redirect: 'follow'
+});
+  
   <script>
     // ★LIFF IDとGASのURL（必ずご自身の最新のものになっているか確認してください）
     const MY_LIFF_ID = "2009990487-4O047QXv";
