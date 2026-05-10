@@ -46,22 +46,8 @@
   <div id="loading"><i class="fas fa-spinner fa-spin"></i> 認証とデータ取得を実行中...</div>
   <div id="quiz-container"></div>
 
-  // 4. GASへ通信（UIDと日数を同時に送る）
-const params = new URLSearchParams({ uid: uid });
-if (dayParam !== "") {
-  params.append('d', dayParam);
-}
-const fetchUrl = `${GAS_URL}?${params.toString()}`;
-
-// オプションを明記してCORSリダイレクトを安全に通過させる
-const response = await fetch(fetchUrl, {
-  method: 'GET',
-  mode: 'cors',
-  redirect: 'follow'
-});
-  
   <script>
-    // ★LIFF IDとGASのURL（必ずご自身の最新のものになっているか確認してください）
+    // ★LIFF IDとGASのURL
     const MY_LIFF_ID = "2009990487-4O047QXv";
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHoEvrhS1i9DMUZnU-su1m78NwZa12mZbof8qVpPEHntnVuE4oJR06T1jnMv6tLUWCRg/exec';
 
@@ -82,13 +68,19 @@ const response = await fetch(fetchUrl, {
         const urlParams = new URLSearchParams(window.location.search);
         const dayParam = urlParams.get('d') || "";
 
-        // 4. GASへ通信（UIDと日数を同時に送る）
-        let fetchUrl = `${GAS_URL}?uid=${uid}`;
+        // 4. GASへ通信（UIDと日数を同時に送る）★ここを修正しました★
+        const params = new URLSearchParams({ uid: uid });
         if (dayParam !== "") {
-          fetchUrl += `&d=${dayParam}`;
+          params.append('d', dayParam);
         }
+        const fetchUrl = `${GAS_URL}?${params.toString()}`;
 
-        const response = await fetch(fetchUrl);
+        // オプションを明記してCORSリダイレクトを安全に通過させる
+        const response = await fetch(fetchUrl, {
+          method: 'GET',
+          mode: 'cors',
+          redirect: 'follow'
+        });
         const result = await response.json();
 
         // 5. 認証失敗またはエラーのハンドリング
@@ -98,7 +90,7 @@ const response = await fetch(fetchUrl, {
           return;
         }
 
-        // 6. 認証成功＆描画処理（GAS側で quizData という名前で送られてくる）
+        // 6. 認証成功＆描画処理
         document.getElementById('loading').classList.add('hidden');
         const quizzes = result.quizData; 
         const container = document.getElementById('quiz-container');
@@ -132,6 +124,7 @@ const response = await fetch(fetchUrl, {
 
       } catch (e) {
         document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> 通信エラーが発生しました。時間をおいて再試行してください。</div>`;
+        console.error(e); // デバッグ用にエラーをコンソールに出力するよう追加
       }
     }
 
