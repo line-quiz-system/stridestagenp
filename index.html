@@ -123,10 +123,16 @@
         });
 
       } catch (e) {
-        document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> 通信エラーが発生しました。時間をおいて再試行してください。</div>`;
-        console.error(e); // デバッグ用にエラーをコンソールに出力するよう追加
+        document.getElementById('loading').innerHTML = `
+          <div style="color:#b91c1c; text-align:left; font-size:0.85em; padding:15px; background:#fef2f2; border:1px solid #f87171; border-radius:8px; margin-top:20px;">
+            <b><i class="fa-solid fa-bug"></i> エラー詳細（この画面をスクショしてください）</b><br><br>
+            <b>エラー名:</b> ${e.name}<br>
+            <b>メッセージ:</b> ${e.message}<br>
+            <hr style="border-top:1px solid #fca5a5; margin:10px 0;">
+            <b>アクセス先:</b> ${typeof fetchUrl !== 'undefined' ? fetchUrl : 'URL生成前'}
+          </div>
+        `;
       }
-    }
 
     // UI操作用の関数群
     function selectOption(el, quizIndex) {
