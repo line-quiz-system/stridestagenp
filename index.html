@@ -83,10 +83,22 @@
         });
         const result = await response.json();
 
-        // 5. 認証失敗またはエラーのハンドリング
+// 5. 認証失敗またはエラーのハンドリング
         if (!result.isAuth || result.error) {
-          const errMsg = result.error || "権限がありません。有料プランの登録が必要です。";
-          document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-lock"></i> ${errMsg}</div>`;
+          const errMsg = result.error || "権限がありません。クイズを解くには有料プランの登録が必要です。";
+          
+          // ★ここでUID付きの決済URLを動的に生成
+          const checkoutUrl = `${STRIPE_LINK}?client_reference_id=${uid}`; 
+          
+          // ★エラーメッセージと共に、Stripe決済画面へ飛ぶボタンを表示
+          document.getElementById('loading').innerHTML = `
+            <div style="color:#ef4444; margin-bottom: 20px; font-weight: bold;">
+              <i class="fa-solid fa-lock"></i> ${errMsg}
+            </div>
+            <button onclick="window.location.href='${checkoutUrl}'" class="btn" style="background:#6366f1; color:white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);">
+              <i class="fa-solid fa-credit-card"></i> 有料プランに登録する
+            </button>
+          `;
           return;
         }
 
