@@ -38,14 +38,26 @@
   </style>
 </head>
 <body>
-
+<div id="main-content">
   <div class="header">
     <h1><i class="fa-solid fa-heart-pulse" style="color:#ef4444;"></i> 心臓血管外科 Daily Quiz</h1>
   </div>
 
   <div id="loading"><i class="fas fa-spinner fa-spin"></i> 認証とデータ取得を実行中...</div>
   <div id="quiz-container"></div>
+　</div>
 
+<!-- 新規追加：決済完了後のサンクス画面（初期は非表示） -->
+<div id="success-screen" style="display: none; text-align: center; padding: 20px;">
+  <h2 style="color: #4CAF50;">✨ 決済が完了しました！</h2>
+  <p>医療クイズSaaSのプレミアムプランへようこそ。<br>トーク画面に初期設定の案内と本日の問題をお送りしました。</p>
+  <p>以下のボタンを押してトーク画面に戻ってください。</p>
+  
+  <!-- LIFFを閉じるボタン -->
+  <button id="close-liff-btn" style="background-color: #06C755; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; margin-top: 20px;">
+    トーク画面に戻る
+  </button>
+</div>
   <script>
     // ★LIFF IDとGASのURL
     const MY_LIFF_ID = "2009990487-4O047QXv";
@@ -172,9 +184,46 @@
         btn.style.background = '#059669';
       }
     }
+    
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  // 1. LIFFの初期化
+  liff.init({ liffId: "2009990487-4O047QXv" }) // ※ご自身のLIFF ID
+    .then(() => {
+      // 2. URLのパラメータを確認する処理
+      const urlParams = new URLSearchParams(window.location.search);
+      const isSuccess = urlParams.get('success');
 
-    // メイン処理の実行
-    main();
-  </script>
+      if (isSuccess === 'true') {
+        // ==========================================
+        // 【A】決済成功で戻ってきた場合の処理（新規）
+        // ==========================================
+        document.getElementById('main-content').style.display = 'none'; // クイズ画面を隠す
+        document.getElementById('success-screen').style.display = 'block'; // サンクス画面を表示
+
+        // 「トーク画面に戻る」ボタンを押したときの処理
+        document.getElementById('close-liff-btn').addEventListener('click', function() {
+          if (liff.isInClient()) {
+            liff.closeWindow(); // LIFFを閉じてトーク画面に戻る
+          } else {
+            window.close();
+            alert("画面の✕ボタン、またはブラウザのタブを閉じてLINEに戻ってください。");
+          }
+        });
+
+      } else {
+        // ==========================================
+        // 【B】通常アクセス時の処理（これまでの既存コード）
+        // ==========================================
+        // ※ここに今まで書いていた「isAuthの確認」や「クイズデータの取得（GASのdoGet呼び出し）」などのコードをそのまま入れます。
+        // console.log("通常モードで起動");
+        // ...
+      }
+    })
+    .catch((err) => {
+      console.error("LIFF Initialization failed", err);
+      document.getElementById('loading').innerText = "エラーが発生しました。もう一度開き直してください。";
+    });
+</script>
 </body>
 </html>
