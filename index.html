@@ -58,172 +58,157 @@
     トーク画面に戻る
   </button>
 </div>
-  <script>
-    // ★LIFF IDとGASのURL
-    const MY_LIFF_ID = "2009990487-4O047QXv";
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec';
-    const STRIPE_LINK = "https://buy.stripe.com/test_14A28qccl64K44kbGS4ko00";
+<!-- ...前略（CSSやHTMLの<div id="success-screen">までは今のままでOK）... -->
 
-    async function main() {
-      try {
-        // 1. LIFFの初期化
-        await liff.init({ liffId: MY_LIFF_ID });
-        
-        if (!liff.isLoggedIn()) {
-          document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-lock"></i> LINEアプリから開いてください。</div>`;
-          return;
-        }
-
-        // 2. UIDの取得
-        const uid = liff.getContext().userId;
-
-        // 3. URLパラメータ（?d=〇）の取得
-        const urlParams = new URLSearchParams(window.location.search);
-        const dayParam = urlParams.get('d') || "";
-
-        // 4. GASへ通信（UIDと日数を同時に送る）★ここを修正しました★
-        const params = new URLSearchParams({ uid: uid });
-        if (dayParam !== "") {
-          params.append('d', dayParam);
-        }
-        const fetchUrl = `${GAS_URL}?${params.toString()}`;
-
-        // オプションを明記してCORSリダイレクトを安全に通過させる
-        const response = await fetch(fetchUrl, {
-          method: 'GET',
-          mode: 'cors',
-          redirect: 'follow'
-        });
-        const result = await response.json();
-
-// 5. 認証失敗またはエラーのハンドリング
-        if (!result.isAuth || result.error) {
-          const errMsg = result.error || "権限がありません。クイズを解くには有料プランの登録が必要です。";
-          
-          // ★ここでUID付きの決済URLを動的に生成
-          const checkoutUrl = `${STRIPE_LINK}?client_reference_id=${uid}`; 
-          
-          // ★エラーメッセージと共に、Stripe決済画面へ飛ぶボタンを表示
-          document.getElementById('loading').innerHTML = `
-            <div style="color:#ef4444; margin-bottom: 20px; font-weight: bold;">
-              <i class="fa-solid fa-lock"></i> ${errMsg}
-            </div>
-            <button onclick="window.location.href='${checkoutUrl}'" class="btn" style="background:#6366f1; color:white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);">
-              <i class="fa-solid fa-credit-card"></i> 有料プランに登録する
-            </button>
-          `;
-          return;
-        }
-
-        // 6. 認証成功＆描画処理
-        document.getElementById('loading').classList.add('hidden');
-        const quizzes = result.quizData; 
-        const container = document.getElementById('quiz-container');
-        
-        quizzes.forEach((data, index) => {
-          const card = document.createElement('div');
-          card.className = 'quiz-card';
-          
-          const options = [data.option1, data.option2, data.option3, data.option4].filter(o => o && o.trim() !== "");
-          let optionsHtml = '';
-          options.forEach((opt, i) => {
-            optionsHtml += `<div class="option" onclick="selectOption(this, ${index})">${i + 1}. ${opt}</div>`;
-          });
-
-          const imageHtml = data.image ? `<img src="${data.image}" class="q-image" alt="問題画像">` : '';
-          const hintBtnHtml = data.hint ? `<button class="btn btn-hint" onclick="toggleHint(${index})"><i class="fa-solid fa-lightbulb"></i> ヒントを見る</button><p id="hint-${index}" class="hidden" style="font-size: 0.9em; padding: 12px; margin-top: 10px; color: #666; background:#fff; border-radius:8px; border:1px dashed #cbd5e1;">${data.hint}</p>` : '';
-
-          card.innerHTML = `
-            <div class="question-text">問${index + 1}. ${data.question}</div>
-            ${imageHtml}
-            <div class="options-group">${optionsHtml}</div>
-            ${hintBtnHtml}
-            <button id="ans-btn-${index}" class="btn btn-answer" onclick="toggleAnswer(${index})"><i class="fa-solid fa-check-double"></i> 回答と解説を見る</button>
-            <div id="expl-${index}" class="explanation-area">
-              <h4>正解：${data.answer}</h4>
-              <p>${data.explanation}</p>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-
-      } catch (e) {
-        document.getElementById('loading').innerHTML = `
-          <div style="color:#b91c1c; text-align:left; font-size:0.85em; padding:15px; background:#fef2f2; border:1px solid #f87171; border-radius:8px; margin-top:20px;">
-            <b><i class="fa-solid fa-bug"></i> エラー詳細（この画面をスクショしてください）</b><br><br>
-            <b>エラー名:</b> ${e.name}<br>
-            <b>メッセージ:</b> ${e.message}<br>
-            <hr style="border-top:1px solid #fca5a5; margin:10px 0;">
-            <b>アクセス先:</b> ${typeof fetchUrl !== 'undefined' ? fetchUrl : 'URL生成前'}
-          </div>
-        `;
-      }
-    } // ★★★ この閉じカッコを絶対に追加！！！ ★★★
-
-    // UI操作用の関数群
-    function selectOption(el, quizIndex) {
-      const opts = document.getElementsByClassName('quiz-card')[quizIndex].getElementsByClassName('option');
-      for (let opt of opts) opt.classList.remove('selected');
-      el.classList.add('selected');
-    }
-    
-    function toggleHint(index) { 
-      document.getElementById(`hint-${index}`).classList.toggle('hidden'); 
-    }
-    
-    function toggleAnswer(index) {
-      const area = document.getElementById(`expl-${index}`);
-      const btn = document.getElementById(`ans-btn-${index}`);
-      if (area.style.display === 'block') {
-        area.style.display = 'none';
-        btn.innerHTML = '<i class="fa-solid fa-check-double"></i> 回答と解説を見る';
-        btn.style.background = '#10b981';
-      } else {
-        area.style.display = 'block';
-        btn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> 解説を閉じる';
-        btn.style.background = '#059669';
-      }
-    }
-    
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  // 1. LIFFの初期化
-  liff.init({ liffId: "2009990487-4O047QXv" }) // ※ご自身のLIFF ID
-    .then(() => {
-      // 2. URLのパラメータを確認する処理
+  // ★機密情報は必ずあなたの本物の文字列に書き換えてください
+  const MY_LIFF_ID = "2009990487-4O047QXv"; // 例: 165...
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec';    // 例: https://script.google.com/...
+  const STRIPE_LINK = "https://buy.stripe.com/test_14A28qccl64K44kbGS4ko00"; // 例: https://buy.stripe.com/test_...
+
+  async function main() {
+    try {
+      // 1. LIFFの初期化
+      await liff.init({ liffId: MY_LIFF_ID });
+
+      // ==========================================
+      // 【A】決済成功（サンクス画面）の判定と処理
+      // ==========================================
       const urlParams = new URLSearchParams(window.location.search);
       const isSuccess = urlParams.get('success');
 
       if (isSuccess === 'true') {
-        // ==========================================
-        // 【A】決済成功で戻ってきた場合の処理（新規）
-        // ==========================================
         document.getElementById('main-content').style.display = 'none'; // クイズ画面を隠す
         document.getElementById('success-screen').style.display = 'block'; // サンクス画面を表示
 
-        // 「トーク画面に戻る」ボタンを押したときの処理
+        // 「トーク画面に戻る」ボタンの処理
         document.getElementById('close-liff-btn').addEventListener('click', function() {
           if (liff.isInClient()) {
-            liff.closeWindow(); // LIFFを閉じてトーク画面に戻る
+            liff.closeWindow();
           } else {
             window.close();
             alert("画面の✕ボタン、またはブラウザのタブを閉じてLINEに戻ってください。");
           }
         });
-
-      } else {
-        // ==========================================
-        // 【B】通常アクセス時の処理（これまでの既存コード）
-        // ==========================================
-        // ※ここに今まで書いていた「isAuthの確認」や「クイズデータの取得（GASのdoGet呼び出し）」などのコードをそのまま入れます。
-        // console.log("通常モードで起動");
-        // ...
+        // ★決済直後はここで処理を終了し、下のクイズ取得処理には進ませない
+        return; 
       }
-    })
-    .catch((err) => {
-      console.error("LIFF Initialization failed", err);
-      document.getElementById('loading').innerText = "エラーが発生しました。もう一度開き直してください。";
-    });
+
+      // ==========================================
+      // 【B】通常アクセス時（クイズ画面）の処理
+      // ==========================================
+      if (!liff.isLoggedIn()) {
+        document.getElementById('loading').innerHTML = `<div style="color:#ef4444;"><i class="fa-solid fa-lock"></i> LINEアプリから開いてください。</div>`;
+        return;
+      }
+
+      // 2. UIDと日数パラメータの取得
+      const uid = liff.getContext().userId;
+      const dayParam = urlParams.get('d') || "";
+
+      // 3. GASへ通信
+      const params = new URLSearchParams({ uid: uid });
+      if (dayParam !== "") {
+        params.append('d', dayParam);
+      }
+      const fetchUrl = `${GAS_URL}?${params.toString()}`;
+
+      const response = await fetch(fetchUrl, {
+        method: 'GET',
+        mode: 'cors',
+        redirect: 'follow'
+      });
+      const result = await response.json();
+
+      // 4. 認証失敗またはエラーのハンドリング
+      if (!result.isAuth || result.error) {
+        const errMsg = result.error || "権限がありません。クイズを解くには有料プランの登録が必要です。";
+        const checkoutUrl = `${STRIPE_LINK}?client_reference_id=${uid}`; 
+        
+        document.getElementById('loading').innerHTML = `
+          <div style="color:#ef4444; margin-bottom: 20px; font-weight: bold;">
+            <i class="fa-solid fa-lock"></i> ${errMsg}
+          </div>
+          <button onclick="window.location.href='${checkoutUrl}'" class="btn" style="background:#6366f1; color:white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);">
+            <i class="fa-solid fa-credit-card"></i> 有料プランに登録する
+          </button>
+        `;
+        return;
+      }
+
+      // 5. 認証成功＆クイズ描画処理
+      document.getElementById('loading').classList.add('hidden');
+      const quizzes = result.quizData; 
+      const container = document.getElementById('quiz-container');
+      
+      quizzes.forEach((data, index) => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        
+        const options = [data.option1, data.option2, data.option3, data.option4].filter(o => o && o.trim() !== "");
+        let optionsHtml = '';
+        options.forEach((opt, i) => {
+          optionsHtml += `<div class="option" onclick="selectOption(this, ${index})">${i + 1}. ${opt}</div>`;
+        });
+
+        const imageHtml = data.image ? `<img src="${data.image}" class="q-image" alt="問題画像">` : '';
+        const hintBtnHtml = data.hint ? `<button class="btn btn-hint" onclick="toggleHint(${index})"><i class="fa-solid fa-lightbulb"></i> ヒントを見る</button><p id="hint-${index}" class="hidden" style="font-size: 0.9em; padding: 12px; margin-top: 10px; color: #666; background:#fff; border-radius:8px; border:1px dashed #cbd5e1;">${data.hint}</p>` : '';
+
+        card.innerHTML = `
+          <div class="question-text">問${index + 1}. ${data.question}</div>
+          ${imageHtml}
+          <div class="options-group">${optionsHtml}</div>
+          ${hintBtnHtml}
+          <button id="ans-btn-${index}" class="btn btn-answer" onclick="toggleAnswer(${index})"><i class="fa-solid fa-check-double"></i> 回答と解説を見る</button>
+          <div id="expl-${index}" class="explanation-area">
+            <h4>正解：${data.answer}</h4>
+            <p>${data.explanation}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+    } catch (e) {
+      document.getElementById('loading').innerHTML = `
+        <div style="color:#b91c1c; text-align:left; font-size:0.85em; padding:15px; background:#fef2f2; border:1px solid #f87171; border-radius:8px; margin-top:20px;">
+          <b><i class="fa-solid fa-bug"></i> エラー詳細（この画面をスクショしてください）</b><br><br>
+          <b>エラー名:</b> ${e.name}<br>
+          <b>メッセージ:</b> ${e.message}<br>
+          <hr style="border-top:1px solid #fca5a5; margin:10px 0;">
+          <b>アクセス先:</b> ${typeof fetchUrl !== 'undefined' ? fetchUrl : 'URL生成前'}
+        </div>
+      `;
+    }
+  }
+
+  // UI操作用の関数群
+  function selectOption(el, quizIndex) {
+    const opts = document.getElementsByClassName('quiz-card')[quizIndex].getElementsByClassName('option');
+    for (let opt of opts) opt.classList.remove('selected');
+    el.classList.add('selected');
+  }
+  
+  function toggleHint(index) { 
+    document.getElementById(`hint-${index}`).classList.toggle('hidden'); 
+  }
+  
+  function toggleAnswer(index) {
+    const area = document.getElementById(`expl-${index}`);
+    const btn = document.getElementById(`ans-btn-${index}`);
+    if (area.style.display === 'block') {
+      area.style.display = 'none';
+      btn.innerHTML = '<i class="fa-solid fa-check-double"></i> 回答と解説を見る';
+      btn.style.background = '#10b981';
+    } else {
+      area.style.display = 'block';
+      btn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> 解説を閉じる';
+      btn.style.background = '#059669';
+    }
+  }
+
+  // ★最後にmain関数を呼び出して全体の処理を開始する
+  main();
 </script>
 </body>
 </html>
