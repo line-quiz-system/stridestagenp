@@ -121,18 +121,29 @@
       });
       const result = await response.json();
 
-      // 4. 認証失敗またはエラーのハンドリング
+// 4. 認証失敗またはエラーのハンドリング
       if (!result.isAuth || result.error) {
         const errMsg = result.error || "権限がありません。クイズを解くには有料プランの登録が必要です。";
-        const checkoutUrl = `${STRIPE_LINK}?client_reference_id=${uid}`; 
         
+        // ★修正点: ボタンのHTMLを最初は「空」にしておく
+        let buttonHtml = '';
+        
+        // isAuthがfalse（課金が必要な状態）の場合のみ、ボタンのHTMLを生成する
+        if (!result.isAuth) {
+          const checkoutUrl = `${STRIPE_LINK}?client_reference_id=${uid}`; 
+          buttonHtml = `
+            <button onclick="window.location.href='${checkoutUrl}'" class="btn" style="background:#6366f1; color:white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2); margin-top: 15px;">
+              <i class="fa-solid fa-credit-card"></i> 有料プランに登録する
+            </button>
+          `;
+        }
+
+        // 画面にエラーメッセージと（条件を満たした時だけ）ボタンを描画
         document.getElementById('loading').innerHTML = `
-          <div style="color:#ef4444; margin-bottom: 20px; font-weight: bold;">
+          <div style="color:#ef4444; margin-bottom: 10px; font-weight: bold;">
             <i class="fa-solid fa-lock"></i> ${errMsg}
           </div>
-          <button onclick="window.location.href='${checkoutUrl}'" class="btn" style="background:#6366f1; color:white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);">
-            <i class="fa-solid fa-credit-card"></i> 有料プランに登録する
-          </button>
+          ${buttonHtml}
         `;
         return;
       }
