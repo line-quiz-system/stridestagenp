@@ -46,7 +46,47 @@
   <div id="loading"><i class="fas fa-spinner fa-spin"></i> 認証とデータ取得を実行中...</div>
   <div id="quiz-container"></div>
 　</div>
+<!-- index.html 等の <body> 内の適切な場所に貼り付け -->
 
+<button id="cancelButton">解約・設定変更はこちら</button>
+
+<script>
+  // 既存の LIFF 初期化処理 (liff.init) が完了した後のタイミングで実行されるようにしてください
+  document.getElementById('cancelButton').addEventListener('click', async () => {
+    
+    // LIFFからUIDを取得（既存のコードに合わせて適宜書き換えてください）
+    const profile = await liff.getProfile();
+    const userId = profile.userId;
+
+    // あなたのGAS Web App URL（?action=getPortalUrl とパラメーターを付与します）
+    const gasUrl = `https://script.google.com/macros/s/あなたのデプロイID/exec?action=getPortalUrl&userId=${userId}`;
+
+    try {
+      // ボタン連打防止のため無効化（オプション）
+      document.getElementById('cancelButton').disabled = true;
+      document.getElementById('cancelButton').innerText = "画面を準備中...";
+
+      // GASへリクエスト
+      const response = await fetch(gasUrl);
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        // GASから返ってきたStripeポータルURLへ画面を遷移（リダイレクト）させる
+        window.location.href = data.url;
+      } else {
+        alert("エラーが発生しました: " + data.error);
+        document.getElementById('cancelButton').disabled = false;
+        document.getElementById('cancelButton').innerText = "解約・設定変更はこちら";
+      }
+    } catch (error) {
+      console.error("通信エラー", error);
+      alert("通信エラーが発生しました。");
+      document.getElementById('cancelButton').disabled = false;
+      document.getElementById('cancelButton').innerText = "解約・設定変更はこちら";
+    }
+  });
+</script>
+  
 <!-- 新規追加：決済完了後のサンクス画面（初期は非表示） -->
 <div id="success-screen" style="display: none; text-align: center; padding: 20px;">
   <h2 style="color: #4CAF50;">✨ 決済が完了しました！</h2>
