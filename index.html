@@ -58,9 +58,8 @@
     const profile = await liff.getProfile();
     const userId = profile.userId;
 
-    // あなたのGAS Web App URL（?action=getPortalUrl とパラメーターを付与します）
-    const gasUrl = `https://script.google.com/macros/s/あなたのデプロイID/exec?action=getPortalUrl&userId=${userId}`;
-
+    // あなたのGAS Web App URL（?action=getPortalUrl とパラメーターを付与します）// あなたのGAS Web App URLにパラメーターを付与
+    const gasUrl = `https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl&userId=${userId}`;
     try {
       // ボタン連打防止のため無効化（オプション）
       document.getElementById('cancelButton').disabled = true;
