@@ -53,10 +53,11 @@
 <script>
   // 既存の LIFF 初期化処理 (liff.init) が完了した後のタイミングで実行されるようにしてください
   document.getElementById('cancelButton').addEventListener('click', async () => {
-    
-    // LIFFからUIDを取得（既存のコードに合わせて適宜書き換えてください）
     const profile = await liff.getProfile();
     const userId = profile.userId;
+
+    // ★追加：LIFFが実際に取得したUIDを画面に表示させる
+    alert("【デバッグ】LIFFのUIDは：\n" + userId);
 
     // あなたのGAS Web App URL（?action=getPortalUrl とパラメーターを付与します）// あなたのGAS Web App URLにパラメーターを付与
     const gasUrl = `https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl&userId=${userId}`;
