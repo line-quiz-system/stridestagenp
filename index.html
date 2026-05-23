@@ -51,40 +51,43 @@
 <button id="cancelButton">解約・設定変更はこちら</button>
 
 <script>
-  // 既存の LIFF 初期化処理 (liff.init) が完了した後のタイミングで実行されるようにしてください
-  document.getElementById('cancelButton').addEventListener('click', async () => {
+document.getElementById('cancelButton').addEventListener('click', async () => {
+  try {
+    // 1. LIFFからユーザー情報を取得
     const profile = await liff.getProfile();
-    const userId = profile.userId;
+    const currentUid = profile.userId;
 
-    // ★追加：LIFFが実際に取得したUIDを画面に表示させる
-    alert("【デバッグ】LIFFのUIDは：\n" + userId);
+    // テスト確認用（本番では消してOK）
+    alert("送信するUID: " + currentUid);
 
-    // あなたのGAS Web App URL（?action=getPortalUrl とパラメーターを付与します）// あなたのGAS Web App URLにパラメーターを付与
-    const gasUrl = `https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl&userId=${userId}`;
-    try {
-      // ボタン連打防止のため無効化（オプション）
-      document.getElementById('cancelButton').disabled = true;
-      document.getElementById('cancelButton').innerText = "画面を準備中...";
+    // 2. GASへPOSTリクエストを送信
+    const gasUrl = 'https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl&userId=${userId}'; // ★ステップ1でコピーしたGASのURLに置き換える
 
-      // GASへリクエスト
-      const response = await fetch(gasUrl);
-      const data = await response.json();
+    const response = await fetch(gasUrl, {
+      method: 'POST',
+      headers: {
+        // ★重要: GASのCORSエラー回避のため、ここは必ず 'text/plain' にする
+        'Content-Type': 'text/plain', 
+      },
+      // GAS側で requestJson.uid として受け取るための指定
+      body: JSON.stringify({ uid: currentUid }) 
+    });
 
-      if (data.success && data.url) {
-        // GASから返ってきたStripeポータルURLへ画面を遷移（リダイレクト）させる
-        window.location.href = data.url;
-      } else {
-        alert("エラーが発生しました: " + data.error);
-        document.getElementById('cancelButton').disabled = false;
-        document.getElementById('cancelButton').innerText = "解約・設定変更はこちら";
-      }
-    } catch (error) {
-      console.error("通信エラー", error);
-      alert("通信エラーが発生しました。");
-      document.getElementById('cancelButton').disabled = false;
-      document.getElementById('cancelButton').innerText = "解約・設定変更はこちら";
+    // 3. GASからの返答を受け取る
+    const result = await response.json();
+
+    // 4. 結果を画面に表示してテスト判定
+    if (result.status === 'success') {
+      alert('テスト成功！顧客ID取得: ' + result.customerId);
+      // （※Phase 3では、ここで得たIDを使ってカスタマーポータルURLへ遷移させます）
+    } else {
+      alert('テスト失敗（エラー）: ' + result.message);
     }
-  });
+
+  } catch (error) {
+    alert('通信自体に失敗しました: ' + error.message);
+  }
+});
 </script>
   
 <!-- 新規追加：決済完了後のサンクス画面（初期は非表示） -->
