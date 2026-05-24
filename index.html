@@ -57,9 +57,6 @@ document.getElementById('cancelButton').addEventListener('click', async () => {
     const profile = await liff.getProfile();
     const currentUid = profile.userId;
 
-    // テスト確認用（本番では消してOK）
-    alert("送信するUID: " + currentUid);
-
     // 2. GASへPOSTリクエストを送信
     const gasUrl = 'https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl&userId=${userId}'; // ★ステップ1でコピーしたGASのURLに置き換える
 
