@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>解約・設定変更</title>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: sans-serif; background-color: #f0f2f5; text-align: center; padding: 50px 20px; }
+    #message { color: #333; font-size: 1.2em; margin-bottom: 20px; }
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="message">お客様の契約情報を取得しています...<br>しばらくお待ちください。</div>
+  <div class="loader"></div>
+
+  <script>
+    // ★ここをあなたの本物のLIFF ID（解約用）に書き換える
+    const CANCEL_LIFF_ID = "2009990487-4O047QXv"; 
+    // ★決済GASのURL
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl'; 
+
+    async function initCancel() {
+      try {
+        await liff.init({ liffId: CANCEL_LIFF_ID });
+        
+        if (!liff.isLoggedIn()) {
+          document.getElementById('message').innerHTML = "LINEアプリから開いてください。";
+          document.querySelector('.loader').style.display = 'none';
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        const currentUid = profile.userId;
+
+        const response = await fetch(GAS_URL + '&userId=' + currentUid, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ uid: currentUid })
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          window.location.href = result.url; // Stripeポータルへ遷移
+        } else {
+          document.getElementById('message').innerHTML = 'エラーが発生しました: ' + result.message;
+          document.querySelector('.loader').style.display = 'none';
+        }
+
+      } catch (error) {
+        document.getElementById('message').innerHTML = '通信に失敗しました。時間をおいて再度お試しください。';
+        document.querySelector('.loader').style.display = 'none';
+      }
+    }
+
+    initCancel();
+  </script>
+</body>
+</html>
