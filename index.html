@@ -55,10 +55,11 @@ document.getElementById('cancelButton').addEventListener('click', async () => {
   try {
     // 1. LIFFからユーザー情報を取得
     const profile = await liff.getProfile();
-    const currentUid = profile.userId;
+    const currentUid = profile.userId; // 取得した変数名は「currentUid」
 
     // 2. GASへPOSTリクエストを送信
-    const gasUrl = 'https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl&userId=${userId}'; // ★ステップ1でコピーしたGASのURLに置き換える
+    // ✅ 修正後（バッククォートに直し、変数名を currentUid に統一）
+    const gasUrl = `https://script.google.com/macros/s/AKfycby-1qSOYzLiuz9U19xD5U8lGrQwrWXPHpLs3RsyzuZ6LF4ri9QqzmGaUjaiiWO2AOqE4g/exec?action=getPortalUrl&userId=${currentUid}`; 
 
     const response = await fetch(gasUrl, {
       method: 'POST',
@@ -69,7 +70,6 @@ document.getElementById('cancelButton').addEventListener('click', async () => {
       // GAS側で requestJson.uid として受け取るための指定
       body: JSON.stringify({ uid: currentUid }) 
     });
-
     // 3. GASからの返答を受け取る
     const result = await response.json();
     // 4. 結果を受け取り、カスタマーポータルへリダイレクト
