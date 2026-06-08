@@ -234,9 +234,8 @@ document.getElementById('cancelButton').addEventListener('click', async () => {
 
   // UI操作用の関数群
   function selectOption(el, quizIndex) {
-    const opts = document.getElementsByClassName('quiz-card')[quizIndex].getElementsByClassName('option');
-    for (let opt of opts) opt.classList.remove('selected');
-    el.classList.add('selected');
+    // クリックされた選択肢の 'selected' クラスを付け外し（トグル）して複数選択を可能にする
+    el.classList.toggle('selected');
   }
   
   function toggleHint(index) { 
