@@ -389,6 +389,7 @@
 
 </div>
   <style>
+    /* （CSSは前回と同じです） */
     .agreement-section {
       margin-top: 40px;
       padding: 20px;
@@ -396,6 +397,7 @@
       border: 2px solid #cce5ff;
       border-radius: 8px;
       text-align: center;
+      display: none; /* ★初期状態では非表示にするハック */
     }
     .checkbox-container {
       display: flex;
@@ -426,16 +428,15 @@
       font-size: 1.1em;
       font-weight: bold;
       color: #fff;
-      background-color: #ccc; /* 初期状態はグレー */
+      background-color: #ccc;
       border: none;
       border-radius: 50px;
       cursor: not-allowed;
       transition: background-color 0.3s ease;
       text-decoration: none;
     }
-    /* チェックが入った時のボタンデザイン */
     .register-btn.active {
-      background-color: #00B900; /* LINEグリーン */
+      background-color: #00B900;
       cursor: pointer;
       box-shadow: 0 4px 6px rgba(0, 185, 0, 0.3);
     }
@@ -445,18 +446,28 @@
     }
   </style>
 
-  <div class="agreement-section">
+  <div id="agreementSection" class="agreement-section">
     <label class="checkbox-container">
       <input type="checkbox" id="agreeCheckbox">
       <span>上記の利用規約、特定商取引法に基づく表記、およびプライバシーポリシーのすべてに同意します。</span>
     </label>
-    <button id="registerBtn" class="register-btn" disabled>会員登録ページへ進む</button>
+    <button id="registerBtn" class="register-btn" disabled>Stripe決済画面へ進む</button>
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
+      const agreementSection = document.getElementById("agreementSection");
       const checkbox = document.getElementById("agreeCheckbox");
       const registerBtn = document.getElementById("registerBtn");
+
+      // ★URLパラメータ（?mode=...）を取得
+      const urlParams = new URLSearchParams(window.location.search);
+      const mode = urlParams.get('mode');
+
+      // ★modeが 'register' の場合のみ、同意セクションを表示する
+      if (mode === 'register') {
+        agreementSection.style.display = 'block';
+      }
 
       // チェックボックスの状態が変わったときの処理
       checkbox.addEventListener("change", function() {
@@ -472,9 +483,9 @@
       // ボタンがクリックされたときの処理
       registerBtn.addEventListener("click", function() {
         if (checkbox.checked) {
-          // ▼▼ ここに会員登録ページのURLを設定します ▼▼
-          const registerUrl = "【https://buy.stripe.com/test_14A28qccl64K44kbGS4ko00】"; 
-          window.location.href = registerUrl;
+          // ▼▼ ここにStripeのPayment LinkのURLを設定します ▼▼
+          const stripePaymentLink = "【未確定：Stripe Payment LinkのURL】"; 
+          window.location.href = stripePaymentLink;
         }
       });
     });
