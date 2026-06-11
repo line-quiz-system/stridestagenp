@@ -384,9 +384,98 @@
   電話番号：050-6892-5644<br>
   ※お問い合わせは、原則としてメールまたはLINE公式アカウントよりお願いいたします。</p>
   
-  <p>制定日：2026年6月11日<br>
+<p>制定日：2026年6月11日<br>
   最終改定日：2026年6月11日</p>
 
 </div>
-</body>
-</html>
+  <style>
+    .agreement-section {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #f1f8ff;
+      border: 2px solid #cce5ff;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: left;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .checkbox-container input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .checkbox-container label {
+      font-size: 0.95em;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      user-select: none;
+    }
+    .register-btn {
+      display: inline-block;
+      width: 100%;
+      max-width: 300px;
+      padding: 15px 20px;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #fff;
+      background-color: #ccc; /* 初期状態はグレー */
+      border: none;
+      border-radius: 50px;
+      cursor: not-allowed;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+    }
+    /* チェックが入った時のボタンデザイン */
+    .register-btn.active {
+      background-color: #00B900; /* LINEグリーン */
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 185, 0, 0.3);
+    }
+    .register-btn.active:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 3px rgba(0, 185, 0, 0.3);
+    }
+  </style>
+
+  <div class="agreement-section">
+    <label class="checkbox-container">
+      <input type="checkbox" id="agreeCheckbox">
+      <span>上記の利用規約、特定商取引法に基づく表記、およびプライバシーポリシーのすべてに同意します。</span>
+    </label>
+    <button id="registerBtn" class="register-btn" disabled>会員登録ページへ進む</button>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const checkbox = document.getElementById("agreeCheckbox");
+      const registerBtn = document.getElementById("registerBtn");
+
+      // チェックボックスの状態が変わったときの処理
+      checkbox.addEventListener("change", function() {
+        if (checkbox.checked) {
+          registerBtn.disabled = false;
+          registerBtn.classList.add("active");
+        } else {
+          registerBtn.disabled = true;
+          registerBtn.classList.remove("active");
+        }
+      });
+
+      // ボタンがクリックされたときの処理
+      registerBtn.addEventListener("click", function() {
+        if (checkbox.checked) {
+          // ▼▼ ここに会員登録ページのURLを設定します ▼▼
+          const registerUrl = "【未確定：会員登録ページのURL】"; 
+          window.location.href = registerUrl;
+        }
+      });
+    });
+  </script>
