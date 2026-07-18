@@ -46,7 +46,10 @@
         if (result.status === 'success') {
           window.location.href = result.url; // Stripeポータルへ遷移
         } else {
-          document.getElementById('message').innerHTML = 'エラーが発生しました: ' + result.message;
+          document.getElementById('message').innerHTML = `
+  　　　　現在、有効な有料プランの契約はありません。<br><br>
+  　　　　<a href="https://liff.line.me/【★クイズ画面(index.html)のLIFF ID★】" style="display:inline-block; padding:10px 20px; background-color:#06C755; color:white; text-decoration:none; border-radius:5px; margin-top:10px;">学習画面・プレミアム登録へ戻る</a><br><br>
+  　　　　<span style="font-size:12px; color:#666;">※本コンテンツは学習目的であり、実際の臨床現場では各施設のプロトコルに従うこと。</span>`;
           document.querySelector('.loader').style.display = 'none';
         }
 
